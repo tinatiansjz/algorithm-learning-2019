@@ -29,6 +29,7 @@ int upper_bound(int* A, int x, int y, int v){
         if(A[m]<=v) x = m+1;
         else y = m;
     }
+    return x;
 }
 int main(){
     return 0;
