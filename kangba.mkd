@@ -192,3 +192,607 @@ ll fastpower(ll a, ll n){
     return ans;
 }
 ```
+#spfa
+```C++
+#include <iostream>
+#include <cstdio>
+#include <queue>
+#include <cstring>
+#include <vector>
+using namespace std;
+const int INF = 0x3f3f3f3f;
+const int maxn = 1000+10;
+struct Edge{
+    int from, to, dist;
+    Edge(int u, int v, int d):from(u),to(v),dist(d){}
+};
+struct SPFA{
+    int n, m;
+    vector<Edge> edges;
+    vector<int> G[maxn];
+    int d[maxn]; //s到各个点的距离
+    int p[maxn]; //最短路中的上一条弧
+    int inq[maxn]; //对应节点是否在队列里面
+    int cnt[maxn]; //对应节点被加到队列里面的次数
+    void init(int n){
+        this->n = n;
+        for(int i = 0; i < n; i++) G[i].clear();
+        edges.clear();
+        memset(inq, 0, sizeof(inq));
+        memset(cnt, 0, sizeof(cnt));
+    }
+    void AddEdge(int from, int to, int dist){
+        edges.push_back(Edge(from, to, dist));
+        m = edges.size();
+        G[from].push_back(m-1);
+    }
+    bool bellman_ford(int s){
+        queue<int> Q;
+        for(int i = 0; i < n; i++) d[i] = INF;
+        d[s] = 0;
+        inq[s] = true;
+        Q.push(s);
+        while(!Q.empty()){
+            int u = Q.front(); Q.pop();
+            inq[u] = false;
+            for(int i = 0; i < G[u].size(); i++){
+                Edge& e = edges[G[u][i]];
+                if(d[u] < INF && d[e.to] > d[u]+e.dist){
+                    d[e.to] = d[u] + e.dist;
+                    p[e.to] = G[u][i];
+                    if(!inq[e.to]){
+                        Q.push(e.to); inq[e.to] = true;
+                        if(++cnt[e.to] > n)
+                            return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+};
+int main(){
+    return 0;
+}
+```
+#Dijkstra
+```C++
+#include <iostream>
+#include <cstdio>
+#include <vector>
+#include <queue>
+#include <cstring>
+using namespace std;
+const int INF = 0x3f3f3f3f;
+struct Edge{
+    int from, to, dist;
+    Edge(int u, int v, int d):from(u),to(v),dist(d){}
+};
+struct HeapNode{
+    int d, u;
+    bool operator < (const HeapNode rhs) const{
+        return d > rhs.d || (d == rhs.d && u > rhs.u);
+    }
+};
+struct Dijkstra{
+    int n, m;
+    vector<Edge> edges;
+    vector<int> G[maxn];
+    bool done[maxn]; //是否永久标号
+    int d[maxn]; //s到各个点的距离
+    int p[maxn]; //最短路中的上一条弧
+
+    void init(int n){
+        this->n = n;
+        for(int i = 0; i < n; i++) G[i].clear();
+        edges.clear();
+    }
+    void AddEdge(int from, int to, int dist){
+        edges.push_back(Edge(from, to, dist));
+        m = edges.size();
+        G[from].push_back(m-1);
+    }
+    void dijkstra(int s){
+        priority_queue<HeapNode> Q;
+        for(int i = 0; i < n; i++) d[i] = INF;
+        d[s] = 0;
+        memset(done, 0, sizeof(done));
+        Q.push((HeapNode){0, s});
+        while(!Q.empty()){
+            HeapNode x = Q.top(); Q.pop();
+            int u = x.u;
+            if(done[u]) continue;
+            done[u] = true;
+            for(int i = 0; i < G[u].size(); i++){
+                Edge& e = edges[G[u][i]];
+                if(d[e.to] > d[u] + e.dist){
+                    d[e.to] = d[u] + e.dist;
+                    p[e.to] = G[u][i];
+                    Q.push((HeapNode){d[e.to], e.to});
+                }
+            }
+        }
+    }
+};
+int main(){
+    return 0;   
+}
+```
+#逆序对
+```C++
+//POJ-1804 逆序对-归并排序
+//2018/11/1 15:13
+#include <iostream>
+#include <cstdio>
+using namespace std;
+const int INF = 1e9;
+const int maxn = 500010;
+long long t;//s[]序列逆序数
+int s[maxn];
+void compute_t(int* s, int top, int mid, int end){
+    //left:     s[top]...s[mid]
+    //right:    s[mid+1]...s[end]
+    int len_L = mid-top+1;
+    int len_R = end-mid;
+    int* left = new int[len_L+1];
+    int* right = new int[len_R+1];
+    for(int i = 0; i < len_L; i++){
+        left[i] = s[top+i];
+    }
+    left[len_L] = INF;//设置无穷上界，避免比较大小时越界
+    for(int i = 0; i < len_R; i++){
+        right[i] = s[mid+i+1];
+    }
+    right[len_R] = INF;
+    int i = 0, j = 0;
+    for(int k = top; k <= end;){
+        if(left[i] <= right[j]){
+            s[k++] = left[i++];
+        }else{
+            s[k++] = right[j++];
+            t += len_L -i;
+        }
+    }
+    delete left;
+    delete right;
+    return;
+}
+void mergesort(int* s, int top, int end){
+    if(top < end){
+        int mid = (top+end)/2;
+        mergesort(s, top, mid);
+        mergesort(s, mid+1, end);
+        compute_t(s, top, mid, end);
+    }
+    return;
+}
+int main(){
+    freopen("POJ-1804_in.txt", "r", stdin);
+    int N;
+    cin >> N;
+    int x = 0;
+    while(N--){
+        x++;
+        int n;
+        cin >> n;
+        int* s = new int[n];
+        for(int i = 0; i < n; i++){
+            cin >> s[i];
+        }
+        //initialize
+        t = 0;
+        mergesort(s, 0, n-1);
+        cout << "Scenario #" << x << ":\n";
+        cout << t << endl;
+        cout << endl;
+        delete s;
+    }
+    return 0;
+}
+```
+#单调队列
+```C++
+// HDU 6319
+// 2019/2/5 10:16
+// TODO
+// Reversely construct a monotonic queue, starting from i+m-1<=n.
+// If the forward is the last one, the reverse is the first one.
+// GET:
+// 1. initalize in every case (maxans, countans)
+// 2. monotonic queue saves the indexes of the elements
+// 3. an array with front and rear to implement the montonic queue
+//    (deque possesses a high complexity -> TLE)
+// 4. rely on yourself
+// Confusion:
+// Add the dichotomy part (int bound()) -> TLE ???
+#include <iostream>
+#include <cstdio>
+using namespace std;
+const int maxn = 1e7+5;
+int n,m,k,q,p,r,MOD;
+int a[maxn];
+// monotonic queue [front, rear) 
+// save the index of the element
+int qu[maxn];
+long long maxans, countans;
+inline int bound(int x, int y, int v){
+    // find the first position with the value not greater than v
+    while(x < y){
+        int m = x+(y-x)/2;
+        if(a[qu[m]] <= v) y = m;
+        else x = m+1; 
+    }
+    return x;
+}
+void solve(){
+    maxans = 0; countans = 0;
+    int front = 0, rear = 0;
+    for(int i = n; i >= 1; i--){
+        // while(rear > front && a[i] >= a[qu[rear-1]]) rear--;
+        rear = bound(front, rear, a[i]);
+        qu[rear++] = i;
+        if(i > n-m+1) continue;
+        while(qu[front] > i+m-1) front++;
+        countans += (rear-front)^i;
+        maxans += a[qu[front]]^i;
+    }
+}
+int main(){
+    freopen("in.txt", "r", stdin);
+    int T; cin >> T;
+    while(T--){
+        scanf("%d%d%d%d%d%d%d", &n, &m, &k, &p, &q, &r, &MOD);
+        for(int i = 1; i <= k; i++) scanf("%d", &a[i]);
+        for(int i = k+1; i <= n; i++) a[i] = ((long long)p*a[i-1]%MOD + (long long)q*i%MOD + r%MOD)%MOD;
+        solve();
+        printf("%lld %lld\n", maxans, countans);
+    }
+    return 0;
+}
+```
+#最长路
+```C++
+#include <queue>
+#include <stdio.h>
+#include <string.h>
+#include <algorithm>
+ 
+using namespace std;
+ 
+template<int N,int M>
+struct Graph
+{
+    int top;
+    struct Vertex{
+        int head;
+    }V[N];
+    struct Edge{
+        int v,next;
+        int w;
+    }E[M];
+    void init(){
+        memset(V,-1,sizeof(V));
+        top = 0;
+    }
+    void add_edge(int u,int v,int w){
+        E[top].v = v;
+        E[top].w = w;
+        E[top].next = V[u].head;
+        V[u].head = top++;
+    }
+};
+ 
+Graph<50005,150005> g;
+ 
+const int N = 5e4 + 5;
+ 
+int d[N],inqCnt[N];
+ 
+bool inq[N];
+ 
+bool spfa(int s,int n)
+{
+    memset(inqCnt,0,sizeof(inqCnt));
+    memset(inq,false,sizeof(inq));
+    memset(d,-63,sizeof(d));
+    queue<int> Q;
+    Q.push(s);
+    inq[s] = true;
+    d[s] = 0;
+    while(!Q.empty())
+    {
+        int u = Q.front();
+        for(int i=g.V[u].head;~i;i=g.E[i].next)
+        {
+            int v = g.E[i].v;
+            int w = g.E[i].w;
+            if(d[u] + w > d[v])
+            {
+                d[v] = d[u] + w;
+                if(!inq[v])
+                {
+                    Q.push(v);
+                    inq[v] = true;
+                    if(++inqCnt[v] > n)
+                        return true;
+                }
+            }
+        }
+        Q.pop();
+        inq[u] = false;
+    }
+    return false;
+}
+ 
+int main()
+{
+    int n;
+    while(~scanf("%d",&n))
+    {
+        g.init();
+        int L = 50005 , R = 0;
+        for(int i=0;i<n;i++)
+        {
+            int a,b,c;
+            scanf("%d%d%d",&a,&b,&c);
+            ++a , ++b;
+            L = min(L,a);
+            R = max(R,b);
+            g.add_edge(a-1,b,c);
+        }
+        for(int i=L;i<=R;i++)
+        {
+            g.add_edge(i-1,i,0);
+            g.add_edge(i,i-1,-1);
+        }
+        spfa(L-1,R-L+2);
+        printf("%d\n",d[R]);
+        
+    }
+    return 0;
+}
+```
+#线段树
+```C++
+// HDU-1754 线段树(区间最值)
+// 线段树 区间最值 单点更新
+// 2019/2/25 21:03
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+const int INF = 1 << 30;
+const int maxn = 2e5+5;
+const int maxnode = maxn << 2;
+int a[maxn];
+int n, m;
+int op, qL, qR, p, v; //qL和qR为全局变量，询问区间[qL, qR]
+struct IntervalTree{
+    int maxv[maxnode];
+    void build(int o, int L, int R){
+        if(L == R) {maxv[o] = a[L]; return;}
+        int M = L + (R-L)/2;
+        build(o<<1, L, M);
+        build(o<<1|1, M+1, R);
+        maxv[o] = max(maxv[o<<1], maxv[o<<1|1]);
+    }
+    void update(int o, int L, int R){ // root, left, right
+        int M = L + (R-L)/2;
+        if(L == R) maxv[o] = v; // 叶节点,直接更新maxv
+        else{
+            //先递归更新左子树或右子树
+            if(p <= M) update(o<<1, L, M);
+            else update(o<<1|1, M+1, R);
+            //然后再计算本节点的maxv
+            maxv[o] = max(maxv[o<<1], maxv[o<<1|1]);
+        }
+    }
+    int query(int o, int L, int R){
+        int M = L + (R-L)/2, ans = -INF;
+        if(qL <= L && R <= qR) return maxv[o];//当节点完全包含在查询区间内
+        if(qL <= M) ans = max(ans, query(o<<1, L, M));//往左走
+        if(M < qR) ans = max(ans, query(o<<1|1, M+1, R));//往右走
+        return ans;
+    }
+    void debug(){
+        for(int i = 1; i < n<<2; i++)
+            cout << maxv[i] << " ";
+        cout << endl;
+    }
+};
+IntervalTree tree;
+int main(){
+    // freopen("in.txt", "r", stdin);
+    while(scanf("%d%d", &n, &m) == 2){
+        memset(&tree, 0, sizeof(tree));
+        for(int i = 1; i <= n; i++) scanf("%d", &a[i]);
+        tree.build(1, 1, n);
+        // tree.debug();
+        while(m--){
+            do{op = getchar();} while(op == '\n' || op == ' ');
+            if(op == 'U'){
+                scanf("%d%d", &p, &v);
+                tree.update(1, 1, n); // 修改树节点，或者是建树的过程
+            }else{
+                scanf("%d%d", &qL, &qR);
+                printf("%d\n", tree.query(1, 1, n));
+            }
+        }
+    }
+    return 0;
+}
+
+```
+```C++
+// Fast Sequence Operations I
+// Rujia Liu
+// 输入格式：
+// n m     数组范围是a[1]~a[n]，初始化为0。操作有m个
+// 1 L R v 表示设a[L]+=v, a[L+1]+v, ..., a[R]+=v
+// 2 L R   查询a[L]~a[R]的sum, min和max
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+ 
+const int maxnode = 1<<17;
+ 
+int _sum, _min, _max, op, qL, qR, v; //_sum为全局变量
+ 
+struct IntervalTree {
+    int sumv[maxnode], minv[maxnode], maxv[maxnode], addv[maxnode];
+    // 维护信息
+    void maintain(int o, int L, int R) {
+        int lc = o*2, rc = o*2+1;
+        sumv[o] = minv[o] = maxv[o] = 0;
+        if(R > L) {
+            sumv[o] = sumv[lc] + sumv[rc];
+            minv[o] = min(minv[lc], minv[rc]);
+            maxv[o] = max(maxv[lc], maxv[rc]);
+        }
+        if(addv[o]) { minv[o] += addv[o]; maxv[o] += addv[o]; sumv[o] += addv[o] * (R-L+1); }
+    }
+   
+    void update(int o, int L, int R) {
+        int lc = o*2, rc = o*2+1;
+        if(qL <= L && qR >= R) { // 递归边界      
+            addv[o] += v; // 累加边界的add值
+        } else {
+            int M = L + (R-L)/2;
+            if(qL <= M) update(lc, L, M);
+            if(qR > M) update(rc, M+1, R);
+        }
+        maintain(o, L, R); // 递归结束前重新计算本结点的附加信息
+    }
+   
+    void query(int o, int L, int R, int add) {
+        if(qL <= L && qR >= R) { // 递归边界：用边界区间的附加信息更新答案
+            _sum += sumv[o] + add * (R-L+1);
+            _min = min(_min, minv[o] + add);
+            _max = max(_max, maxv[o] + add);
+        } else { // 递归统计，累加参数add
+            int M = L + (R-L)/2;
+            if(qL <= M) query(o*2, L, M, add + addv[o]);
+            if(qR > M) query(o*2+1, M+1, R, add + addv[o]);
+        }
+    }
+};
+ 
+const int INF = 1000000000;
+ 
+IntervalTree tree;
+ 
+int main() {
+    int n, m;
+    while(scanf("%d%d", &n, &m) == 2) {
+        memset(&tree, 0, sizeof(tree));
+        while(m--) {
+            scanf("%d%d%d", &op, &qL, &qR);
+            if(op == 1) {
+                scanf("%d", &v);
+                tree.update(1, 1, n);
+            } else {
+                _sum = 0; _min = INF; _max = -INF;
+                tree.query(1, 1, n, 0);
+                printf("%d %d %d\n", _sum, _min, _max);
+            }
+        }
+    }
+    return 0;
+}
+```
+```C++
+// Fast Sequence Operations II
+// Rujia Liu
+// 输入格式：
+// n m     数组范围是a[1]~a[n]，初始化为0。操作有m个
+// 1 L R v 表示设a[L]=a[L+1]=...=a[R] = v。其中v > 0
+// 2 L R  查询a[L]~a[R]的sum, min和max
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+ 
+const int maxnode = 1<<17;
+ 
+int _sum, _min, _max, op, qL, qR, v;
+ 
+struct IntervalTree {
+    int sumv[maxnode], minv[maxnode], maxv[maxnode], setv[maxnode];
+   
+    // 维护信息
+    void maintain(int o, int L, int R) {
+        int lc = o*2, rc = o*2+1;
+        if(R > L) {
+            sumv[o] = sumv[lc] + sumv[rc];
+            minv[o] = min(minv[lc], minv[rc]);
+            maxv[o] = max(maxv[lc], maxv[rc]);
+        }
+        if(setv[o] >= 0) { minv[o] = maxv[o] = setv[o]; sumv[o] = setv[o] * (R-L+1); }
+    }
+   
+    // 标记传递
+    void pushdown(int o) {
+        int lc = o*2, rc = o*2+1;
+        if(setv[o] >= 0) { //本结点有标记才传递。注意本题中set值非负，所以-1代表没有标记
+            setv[lc] = setv[rc] = setv[o];
+            setv[o] = -1; // 清除本结点标记
+        }
+    }
+   
+    void update(int o, int L, int R) {
+        int lc = o*2, rc = o*2+1;
+        if(qL <= L && qR >= R) { // 标记修改
+            setv[o] = v;
+        } else {
+            pushdown(o);
+            int M = L + (R-L)/2;
+            if(qL <= M) update(lc, L, M); else maintain(lc, L, M);
+            if(qR > M) update(rc, M+1, R); else maintain(rc, M+1, R);
+        }
+        maintain(o, L, R);
+    }
+   
+    void query(int o, int L, int R) {
+        if(setv[o] >= 0) { // 递归边界1：有set标记
+            _sum += setv[o] * (min(R,qR)-max(L,qL)+1);
+            _min = min(_min, setv[o]);
+            _max = max(_max, setv[o]);
+        } else if(qL <= L && qR >= R) { // 递归边界2：边界区间
+            _sum += sumv[o]; // 此边界区间没有被任何set操作影响
+            _min = min(_min, minv[o]);
+            _max = max(_max, maxv[o]);
+        } else { // 递归统计
+            int M = L + (R-L)/2;
+            if(qL <= M) query(o*2, L, M);
+            if(qR > M) query(o*2+1, M+1, R);
+        }
+    }
+};
+ 
+const int INF = 1000000000;
+ 
+IntervalTree tree;
+ 
+int main() {
+    int n, m;
+    while(scanf("%d%d", &n, &m) == 2) {
+        memset(&tree, 0, sizeof(tree));
+        memset(tree.setv, -1, sizeof(tree.setv));
+        tree.setv[1] = 0;
+        while(m--) {
+            scanf("%d%d%d", &op, &qL, &qR);
+            if(op == 1) {
+                scanf("%d", &v);
+                tree.update(1, 1, n);
+            } else {
+                _sum = 0; _min = INF; _max = -INF;
+                tree.query(1, 1, n);
+                printf("%d %d %d\n", _sum, _min, _max);
+            }
+        }
+    }
+    return 0;
+}
+```
