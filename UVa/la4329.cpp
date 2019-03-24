@@ -18,9 +18,7 @@ struct FenwickTree{
     }
     void add(int x, int d){
         while(x <= n){
-            while(x <= n){
-                C[x] += d; x += lowbit(x);
-            }
+            C[x] += d; x += lowbit(x);
         }
     }
 };
