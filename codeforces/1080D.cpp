@@ -1,4 +1,3 @@
-
 //https://codeforces.com/contest/1080/problem/D
 //https://codeforces.com/contest/1080/standings/page/1 (6 lqs2015)
 #include<bits/stdc++.h>
