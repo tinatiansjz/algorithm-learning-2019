@@ -5,6 +5,7 @@
 #include <cstring>
 using namespace std;
 const int INF = 0x3f3f3f3f;
+const int maxn = 1e5+5;
 struct Edge{
     int from, to, dist;
     Edge(int u, int v, int d):from(u),to(v),dist(d){}
