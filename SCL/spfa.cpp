@@ -16,7 +16,7 @@ struct SPFA{
     vector<int> G[maxn];
     int d[maxn]; //s到各个点的距离
     int p[maxn]; //最短路中的上一条弧
-    int inq[maxn]; //对应节点是否在队列里面
+    bool inq[maxn]; //对应节点是否在队列里面
     int cnt[maxn]; //对应节点被加到队列里面的次数
     void init(int n){
         this->n = n;
