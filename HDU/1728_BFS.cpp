@@ -13,7 +13,7 @@ int visited[maxn][maxn][4];
 int m, n, k, x1, y1, x2, y2;
 //  0       1       2       3   <- dir
 //(-1, 0) (0, 1) (1, 0) (0, -1)
-int next[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+int _next[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 bool flag = false;
 struct Node{
     int r;
@@ -27,7 +27,7 @@ Node walk(const Node& u, int i){
     int dir = u.dir;
     int turn = u.turn;
     if(dir != i) turn++;
-    return Node(u.r+next[i][0], u.c+next[i][1], turn, i);
+    return Node(u.r+_next[i][0], u.c+_next[i][1], turn, i);
 }
 bool inside(int r, int c){
     return (r >= 0 && r< m && c >= 0 && c < n);
@@ -36,8 +36,8 @@ void bfs(){
     queue<Node> q;
     int r1, c1, dir1;
     for(int i = 0; i < 4; i++){
-        r1 = y1 + next[i][0];
-        c1 = x1 + next[i][1];
+        r1 = y1 + _next[i][0];
+        c1 = x1 + _next[i][1];
         dir1 = i;
         visited[r1][c1][dir1] = 1;
         q.push(Node(r1, c1, 0, dir1));
